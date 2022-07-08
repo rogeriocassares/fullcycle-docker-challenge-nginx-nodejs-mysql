@@ -1,0 +1,54 @@
+version: '3'
+services:
+  mysql-dev:
+    restart: always
+    build:
+      context: ./mysql/build
+      dockerfile: Dockerfile.dev
+    image: rogeriocassares/mysql_nginx-nodejs-mysql:dev
+    container_name: mysql_nginx-nodejs-mysql-dev
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    command: --innodb-use-native-aio=0
+    volumes:
+      - ./mysql/dev/data:/var/lib/mysql
+    tty: true
+    networks:
+      - nginx-nodejs-mysql-network-dev
+
+  nodejs-dev:
+    restart: always
+    build:
+      context: ./nodejs/build
+      dockerfile: Dockerfile.dev
+    image: rogeriocassares/nodejs_nginx-nodejs-mysql:dev
+    container_name: nodejs_nginx-nodejs-mysql-dev
+    depends_on:
+      - mysql-dev
+    volumes:
+      - ./nodejs/dev/app:/usr/src/app 
+    tty: true
+    ports:
+      - '3000:3000'
+    networks:
+      - nginx-nodejs-mysql-network-dev
+
+  nginx-dev:
+    restart: always
+    build:
+      context: ./nginx/build
+      dockerfile: Dockerfile.dev
+    image: rogeriocassares/nginx_nginx-nodejs-mysql:dev
+    container_name: nginx_nginx-nodejs-mysql-dev
+    volumes:
+      - ./nginx/dev/reverse-proxy.conf:/etc/nginx/conf.d/reverse-proxy.conf
+    ports:
+      - 8080:80
+    networks:
+      - nginx-nodejs-mysql-network-dev
+
+
+networks:
+  nginx-nodejs-mysql-network-dev:
+    driver: bridge

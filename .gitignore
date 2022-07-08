@@ -1,0 +1,5 @@
+mysql/build/src/data
+mysql/dev/data
+
+nodejs/build/src/app/node_modules
+nodejs/dev/app

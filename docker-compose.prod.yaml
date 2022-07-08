@@ -1,0 +1,47 @@
+version: '3'
+services:
+  mysql:
+    restart: always
+    build:
+      context: ./mysql/build
+      dockerfile: Dockerfile.prod
+    image: rogeriocassares/mysql_nginx-nodejs-mysql:prod
+    container_name: mysql_nginx-nodejs-mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    command: --innodb-use-native-aio=0
+    tty: true
+    networks:
+      - nginx-nodejs-mysql-network
+
+  nodejs:
+    restart: always
+    build:
+      context: ./nodejs/build
+      dockerfile: Dockerfile.prod
+    image: rogeriocassares/nodejs_nginx-nodejs-mysql:prod
+    container_name: nodejs_nginx-nodejs-mysql
+    depends_on:
+      - mysql
+    entrypoint: dockerize -wait tcp://mysql:3306 -timeout 10s node index.js
+    tty: true
+    networks:
+      - nginx-nodejs-mysql-network
+
+  nginx:
+    restart: always
+    build:
+      context: ./nginx/build
+      dockerfile: Dockerfile.prod
+    image: rogeriocassares/nginx_nginx-nodejs-mysql:prod
+    container_name: nginx_nginx-nodejs-mysql
+    ports:
+      - 8080:80
+    networks:
+      - nginx-nodejs-mysql-network
+
+
+networks:
+  nginx-nodejs-mysql-network:
+    driver: bridge
